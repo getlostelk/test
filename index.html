@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chloe | 自我介紹</title>
+<style>
+  :root {
+    --forest-dark: #2f4f3e;
+    --forest-mid: #4c7a5e;
+    --forest-light: #8fbc94;
+    --mint: #cde9d3;
+    --cream: #f6f4ea;
+    --accent: #d9a441;
+    --text-dark: #2b3a2f;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: "Noto Sans TC", "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(180deg, var(--cream) 0%, #eef4ec 100%);
+    color: var(--text-dark);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* 背景裝飾葉子 */
+  .leaf-decor {
+    position: fixed;
+    z-index: 0;
+    opacity: 0.15;
+    pointer-events: none;
+  }
+  .leaf-decor.top-left { top: -60px; left: -60px; width: 220px; }
+  .leaf-decor.bottom-right { bottom: -80px; right: -80px; width: 260px; }
+
+  header {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: radial-gradient(circle at 30% 20%, var(--forest-light) 0%, var(--forest-mid) 55%, var(--forest-dark) 100%);
+    color: var(--cream);
+    padding: 40px 20px;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="1.5" fill="white" opacity="0.15"/></svg>');
+    background-size: 60px 60px;
+    opacity: 0.4;
+  }
+
+  .avatar {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--mint), var(--forest-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.2rem;
+    font-weight: 700;
+    color: var(--forest-dark);
+    border: 5px solid rgba(255,255,255,0.6);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    margin-bottom: 24px;
+    animation: floaty 4s ease-in-out infinite;
+  }
+
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  header h1 {
+    position: relative;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+
+  header p.role {
+    position: relative;
+    font-size: 1.2rem;
+    color: var(--mint);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 36px;
+    font-size: 0.85rem;
+    color: var(--mint);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.85;
+  }
+  .scroll-hint span.arrow {
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid var(--mint);
+    border-bottom: 2px solid var(--mint);
+    transform: rotate(45deg);
+    animation: bounce 1.6s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: rotate(45deg) translate(0,0); opacity: 0.6; }
+    50% { transform: rotate(45deg) translate(4px,4px); opacity: 1; }
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 90px 24px;
+  }
+
+  section {
+    margin-bottom: 100px;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 34px;
+  }
+  .section-title .icon {
+    font-size: 1.6rem;
+  }
+  .section-title h2 {
+    font-size: 1.8rem;
+    color: var(--forest-dark);
+    letter-spacing: 1px;
+    position: relative;
+  }
+  .section-title h2::after {
+    content: "";
+    display: block;
+    width: 46px;
+    height: 4px;
+    background: var(--accent);
+    border-radius: 2px;
+    margin-top: 10px;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(143, 188, 148, 0.35);
+    border-radius: 20px;
+    padding: 34px 38px;
+    box-shadow: 0 8px 24px rgba(47, 79, 62, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 34px rgba(47, 79, 62, 0.14);
+  }
+
+  .about-text {
+    font-size: 1.05rem;
+    color: #3d4f42;
+  }
+  .about-text strong {
+    color: var(--forest-mid);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 22px;
+  }
+  .tag {
+    background: var(--mint);
+    color: var(--forest-dark);
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 22px;
+  }
+
+  .feature {
+    background: rgba(255,255,255,0.75);
+    border: 1px solid rgba(143, 188, 148, 0.35);
+    border-radius: 18px;
+    padding: 26px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  }
+  .feature:hover {
+    transform: translateY(-6px) scale(1.02);
+    background: var(--mint);
+    box-shadow: 0 14px 28px rgba(47, 79, 62, 0.15);
+  }
+  .feature .emoji {
+    font-size: 2.2rem;
+    display: block;
+    margin-bottom: 12px;
+  }
+  .feature h3 {
+    font-size: 1.05rem;
+    color: var(--forest-dark);
+    margin-bottom: 8px;
+  }
+  .feature p {
+    font-size: 0.9rem;
+    color: #5a6b5e;
+  }
+
+  .quote {
+    text-align: center;
+    font-size: 1.3rem;
+    font-style: italic;
+    color: var(--forest-dark);
+    padding: 50px 20px;
+    position: relative;
+  }
+  .quote::before,
+  .quote::after {
+    content: "”";
+    font-size: 3rem;
+    color: var(--forest-light);
+    display: block;
+    line-height: 1;
+  }
+  .quote::before { content: "“"; margin-bottom: -10px; }
+
+  footer {
+    text-align: center;
+    padding: 40px 20px 50px;
+    background: var(--forest-dark);
+    color: var(--mint);
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+  }
+  footer .heart {
+    color: var(--accent);
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 600px) {
+    .card { padding: 26px 22px; }
+    main { padding: 70px 18px; }
+  }
+</style>
+</head>
+<body>
+
+  <svg class="leaf-decor top-left" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <path d="M100,10 C160,40 180,110 100,190 C20,110 40,40 100,10 Z" fill="#4c7a5e"/>
+  </svg>
+  <svg class="leaf-decor bottom-right" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <path d="M100,10 C160,40 180,110 100,190 C20,110 40,40 100,10 Z" fill="#8fbc94"/>
+  </svg>
+
+  <header>
+    <div class="avatar">C</div>
+    <h1>你好，我是 Chloe</h1>
+    <p class="role">Designer Assistant · 設計師助理</p>
+    <div class="scroll-hint">
+      向下滾動看更多
+      <span class="arrow"></span>
+    </div>
+  </header>
+
+  <main>
+    <section class="reveal" id="about">
+      <div class="section-title">
+        <span class="icon">🌿</span>
+        <h2>關於我</h2>
+      </div>
+      <div class="card">
+        <p class="about-text">
+          嗨，我是 <strong>Chloe</strong>，目前擔任<strong>設計師助理</strong>，
+          在充滿創意與細節的工作中，學習如何把想法轉化為具體又有溫度的作品。
+          平常喜歡觀察生活中的美感，也享受在協作中激盪出更好的點子。
+        </p>
+        <div class="tags">
+          <span class="tag">設計師助理</span>
+          <span class="tag">熱愛旅行</span>
+          <span class="tag">細節控</span>
+          <span class="tag">團隊合作</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="reveal" id="interests">
+      <div class="section-title">
+        <span class="icon">🧭</span>
+        <h2>興趣與熱愛</h2>
+      </div>
+      <div class="grid">
+        <div class="feature">
+          <span class="emoji">✈️</span>
+          <h3>旅行探索</h3>
+          <p>喜歡到不同城市走走，感受在地文化與風景，為生活與設計找靈感。</p>
+        </div>
+        <div class="feature">
+          <span class="emoji">🎨</span>
+          <h3>美感養成</h3>
+          <p>對色彩、排版與空間的細節敏感，享受打造美好視覺的過程。</p>
+        </div>
+        <div class="feature">
+          <span class="emoji">📷</span>
+          <h3>紀錄生活</h3>
+          <p>喜歡用照片與筆記，把旅途中的瞬間與靈感一一收藏起來。</p>
+        </div>
+        <div class="feature">
+          <span class="emoji">🌱</span>
+          <h3>持續成長</h3>
+          <p>喜歡學習新事物，保持好奇心，讓自己在設計路上不斷進步。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="reveal">
+      <div class="quote">
+        生活就像一場旅行，每一次出發，都是為了遇見更好的自己
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Made with <span class="heart">♥</span> by Chloe · 2026
+  </footer>
+
+  <script>
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('show');
+        }
+      });
+    }, { threshold: 0.15 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
