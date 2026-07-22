@@ -9,6 +9,7 @@
 - 留言資料庫:`guestbook.db`(優先存 `/data`,無則存專案目錄;已加入 .gitignore)
 - GitHub Pages 版頁面跨域呼叫 Zeabur API(CORS 白名單:https://getlostelk.github.io)
 - 本地測試:`PORT=8901 node server.js`
+- 管理模式:網址加 `?admin=1`,可勾選刪除留言;密碼存在 Zeabur 服務的 `ADMIN_TOKEN` 環境變數(**不要**把密碼寫進這個公開 repo)
 
 ## 部署
 
