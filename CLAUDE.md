@@ -1,6 +1,14 @@
 # Chloe 自我介紹網頁
 
-單頁靜態網站(index.html),清新森林色系。
+自我介紹網頁 + 訪客留言板(index.html + server.js),清新森林色系。
+
+## 架構
+
+- `index.html`:前端頁面(含留言板 UI)
+- `server.js`:Node.js 後端(零依賴,`node:sqlite` 內建 SQLite),提供 `/api/messages` GET/POST
+- 留言資料庫:`guestbook.db`(優先存 `/data`,無則存專案目錄;已加入 .gitignore)
+- GitHub Pages 版頁面跨域呼叫 Zeabur API(CORS 白名單:https://getlostelk.github.io)
+- 本地測試:`PORT=8901 node server.js`
 
 ## 部署
 
