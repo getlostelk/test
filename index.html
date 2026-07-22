@@ -279,6 +279,96 @@
     transform: translateY(0);
   }
 
+  /* 留言板 */
+  .gb-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 30px;
+  }
+  .gb-form input,
+  .gb-form textarea {
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--text-dark);
+    background: rgba(255,255,255,0.9);
+    border: 1.5px solid rgba(143, 188, 148, 0.6);
+    border-radius: 12px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    resize: none;
+  }
+  .gb-form input:focus,
+  .gb-form textarea:focus {
+    border-color: var(--forest-mid);
+    box-shadow: 0 0 0 3px rgba(76, 122, 94, 0.15);
+  }
+  .gb-form button {
+    align-self: flex-end;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--cream);
+    background: linear-gradient(135deg, var(--forest-mid), var(--forest-dark));
+    border: none;
+    border-radius: 999px;
+    padding: 12px 34px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    box-shadow: 0 6px 16px rgba(47, 79, 62, 0.25);
+  }
+  .gb-form button:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(47, 79, 62, 0.3); }
+  .gb-form button:disabled { opacity: 0.6; cursor: wait; transform: none; }
+
+  .gb-status {
+    font-size: 0.9rem;
+    min-height: 1.4em;
+    color: var(--forest-mid);
+  }
+  .gb-status.error { color: #b3541e; }
+
+  .gb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .gb-item {
+    background: rgba(255,255,255,0.75);
+    border: 1px solid rgba(143, 188, 148, 0.35);
+    border-left: 4px solid var(--forest-light);
+    border-radius: 14px;
+    padding: 16px 20px;
+  }
+  .gb-item .gb-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .gb-item .gb-name {
+    font-weight: 700;
+    color: var(--forest-dark);
+  }
+  .gb-item .gb-time {
+    font-size: 0.78rem;
+    color: #8a9a8e;
+    white-space: nowrap;
+  }
+  .gb-item .gb-msg {
+    color: #3d4f42;
+    font-size: 0.98rem;
+    word-break: break-word;
+  }
+  .gb-empty {
+    text-align: center;
+    color: #8a9a8e;
+    font-size: 0.95rem;
+    padding: 20px 0;
+  }
+
   @media (max-width: 600px) {
     .card { padding: 26px 22px; }
     main { padding: 70px 18px; }
@@ -359,6 +449,24 @@
         生活就像一場旅行，每一次出發，都是為了遇見更好的自己
       </div>
     </section>
+
+    <section class="reveal" id="guestbook">
+      <div class="section-title">
+        <span class="icon">💌</span>
+        <h2>訪客留言板</h2>
+      </div>
+      <div class="card">
+        <form class="gb-form" id="gbForm">
+          <input type="text" id="gbName" placeholder="你的名字" maxlength="30" required>
+          <textarea id="gbMsg" rows="3" placeholder="留下一句話給 Chloe 吧..." maxlength="200" required></textarea>
+          <div class="gb-status" id="gbStatus"></div>
+          <button type="submit" id="gbSubmit">送出留言</button>
+        </form>
+        <div class="gb-list" id="gbList">
+          <div class="gb-empty">留言載入中...</div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer>
@@ -366,6 +474,87 @@
   </footer>
 
   <script>
+    // ===== 留言板 =====
+    // 在 GitHub Pages(靜態託管)上瀏覽時,跨域呼叫 Zeabur 上的 API
+    const API_BASE = location.hostname.endsWith('github.io')
+      ? 'https://chloe-intro.zeabur.app'
+      : '';
+
+    const gbList = document.getElementById('gbList');
+    const gbForm = document.getElementById('gbForm');
+    const gbStatus = document.getElementById('gbStatus');
+    const gbSubmit = document.getElementById('gbSubmit');
+
+    function renderMessages(rows) {
+      gbList.innerHTML = '';
+      if (!rows.length) {
+        gbList.innerHTML = '<div class="gb-empty">還沒有留言,當第一個留言的人吧!</div>';
+        return;
+      }
+      for (const row of rows) {
+        const item = document.createElement('div');
+        item.className = 'gb-item';
+        const head = document.createElement('div');
+        head.className = 'gb-head';
+        const name = document.createElement('span');
+        name.className = 'gb-name';
+        name.textContent = row.name; // textContent 防止 XSS
+        const time = document.createElement('span');
+        time.className = 'gb-time';
+        time.textContent = new Date(row.created_at + 'Z').toLocaleString('zh-TW', {
+          year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        const msg = document.createElement('div');
+        msg.className = 'gb-msg';
+        msg.textContent = row.message;
+        head.append(name, time);
+        item.append(head, msg);
+        gbList.appendChild(item);
+      }
+    }
+
+    async function loadMessages() {
+      try {
+        const res = await fetch(API_BASE + '/api/messages');
+        if (!res.ok) throw new Error();
+        renderMessages(await res.json());
+      } catch {
+        gbList.innerHTML = '<div class="gb-empty">留言載入失敗,請稍後再試</div>';
+      }
+    }
+
+    gbForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('gbName').value.trim();
+      const message = document.getElementById('gbMsg').value.trim();
+      if (!name || !message) return;
+
+      gbSubmit.disabled = true;
+      gbStatus.className = 'gb-status';
+      gbStatus.textContent = '送出中...';
+      try {
+        const res = await fetch(API_BASE + '/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, message })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || '送出失敗');
+        gbStatus.textContent = '留言成功!';
+        document.getElementById('gbMsg').value = '';
+        await loadMessages();
+        setTimeout(() => { gbStatus.textContent = ''; }, 2500);
+      } catch (err) {
+        gbStatus.className = 'gb-status error';
+        gbStatus.textContent = err.message || '送出失敗,請稍後再試';
+      } finally {
+        gbSubmit.disabled = false;
+      }
+    });
+
+    loadMessages();
+
+    // ===== 捲動淡入 =====
     const reveals = document.querySelectorAll('.reveal');
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {

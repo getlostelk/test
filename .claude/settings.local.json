@@ -4,7 +4,13 @@
       "Bash(git --version)",
       "Bash(gh --version)",
       "Bash(gh auth *)",
-      "Bash(zeabur --version)"
+      "Bash(zeabur --version)",
+      "Bash(claude plugin *)",
+      "Read(//Users/xujingwen/.claude/plugins/**)",
+      "Read(//Users/xujingwen/.claude/plugins/cache/zeabur/**)",
+      "Bash(brew install *)",
+      "Skill(artifact-capabilities)",
+      "Skill(artifact-capabilities:*)"
     ]
   }
 }
