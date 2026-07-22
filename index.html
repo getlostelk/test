@@ -369,6 +369,55 @@
     padding: 20px 0;
   }
 
+  /* 管理模式 */
+  .gb-admin-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #fdf3e3;
+    border: 1px solid #e8cfa0;
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-bottom: 18px;
+    font-size: 0.9rem;
+    color: #8a6d3b;
+  }
+  body.admin-mode .gb-admin-bar { display: flex; }
+  .gb-admin-bar button {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+    background: #c0562f;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+  }
+  .gb-admin-bar button:hover { opacity: 0.85; }
+  .gb-admin-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .gb-item { position: relative; }
+  .gb-check {
+    display: none;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 20px;
+    height: 20px;
+    accent-color: #c0562f;
+    cursor: pointer;
+  }
+  body.admin-mode .gb-check { display: block; }
+  body.admin-mode .gb-item .gb-time { margin-right: 30px; }
+  .gb-item.gb-selected {
+    border-left-color: #c0562f;
+    background: #fdf0ea;
+  }
+
   @media (max-width: 600px) {
     .card { padding: 26px 22px; }
     main { padding: 70px 18px; }
@@ -456,6 +505,10 @@
         <h2>訪客留言板</h2>
       </div>
       <div class="card">
+        <div class="gb-admin-bar" id="gbAdminBar">
+          <span>🔑 管理模式:勾選要刪除的留言</span>
+          <button type="button" id="gbDeleteBtn" disabled>刪除選取 (0)</button>
+        </div>
         <form class="gb-form" id="gbForm">
           <input type="text" id="gbName" placeholder="你的名字" maxlength="30" required>
           <textarea id="gbMsg" rows="3" placeholder="留下一句話給 Chloe 吧..." maxlength="200" required></textarea>
@@ -484,6 +537,26 @@
     const gbForm = document.getElementById('gbForm');
     const gbStatus = document.getElementById('gbStatus');
     const gbSubmit = document.getElementById('gbSubmit');
+    const gbDeleteBtn = document.getElementById('gbDeleteBtn');
+
+    // ===== 管理模式(網址加 ?admin=1 開啟)=====
+    const isAdmin = new URLSearchParams(location.search).has('admin');
+    if (isAdmin) document.body.classList.add('admin-mode');
+
+    function getAdminToken(forceAsk = false) {
+      let token = sessionStorage.getItem('gb_admin_token');
+      if (!token || forceAsk) {
+        token = prompt('請輸入管理密碼:') || '';
+        if (token) sessionStorage.setItem('gb_admin_token', token);
+      }
+      return token;
+    }
+
+    function updateDeleteBtn() {
+      const count = gbList.querySelectorAll('.gb-check:checked').length;
+      gbDeleteBtn.disabled = count === 0;
+      gbDeleteBtn.textContent = `刪除選取 (${count})`;
+    }
 
     function renderMessages(rows) {
       gbList.innerHTML = '';
@@ -509,8 +582,55 @@
         msg.textContent = row.message;
         head.append(name, time);
         item.append(head, msg);
+        if (isAdmin) {
+          const check = document.createElement('input');
+          check.type = 'checkbox';
+          check.className = 'gb-check';
+          check.dataset.id = row.id;
+          check.addEventListener('change', () => {
+            item.classList.toggle('gb-selected', check.checked);
+            updateDeleteBtn();
+          });
+          item.appendChild(check);
+        }
         gbList.appendChild(item);
       }
+      if (isAdmin) updateDeleteBtn();
+    }
+
+    if (isAdmin) {
+      gbDeleteBtn.addEventListener('click', async () => {
+        const ids = [...gbList.querySelectorAll('.gb-check:checked')].map((c) => Number(c.dataset.id));
+        if (!ids.length) return;
+        if (!confirm(`確定要刪除這 ${ids.length} 則留言嗎?刪除後無法復原。`)) return;
+
+        gbDeleteBtn.disabled = true;
+        let token = getAdminToken();
+        try {
+          let res = await fetch(API_BASE + '/api/messages/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ ids })
+          });
+          if (res.status === 403) {
+            sessionStorage.removeItem('gb_admin_token');
+            token = getAdminToken(true);
+            if (!token) throw new Error('需要管理密碼');
+            res = await fetch(API_BASE + '/api/messages/delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+              body: JSON.stringify({ ids })
+            });
+          }
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || '刪除失敗');
+          await loadMessages();
+        } catch (err) {
+          alert(err.message || '刪除失敗,請稍後再試');
+        } finally {
+          updateDeleteBtn();
+        }
+      });
     }
 
     async function loadMessages() {

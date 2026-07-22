@@ -1,7 +1,20 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
+
+// 管理密碼:由環境變數提供;沒設定時刪除功能停用
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
+
+function isValidAdmin(req) {
+  if (!ADMIN_TOKEN) return false;
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  const a = Buffer.from(token);
+  const b = Buffer.from(ADMIN_TOKEN);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
 
 const PORT = process.env.PORT || 8080;
 
@@ -27,7 +40,7 @@ function corsHeaders(req) {
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     headers['Access-Control-Allow-Origin'] = origin;
     headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS';
-    headers['Access-Control-Allow-Headers'] = 'Content-Type';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
   }
   return headers;
 }
@@ -93,6 +106,50 @@ const server = http.createServer((req, res) => {
 
     res.writeHead(405, corsHeaders(req));
     return res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+  }
+
+  // 管理員刪除留言
+  if (url.pathname === '/api/messages/delete') {
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, corsHeaders(req));
+      return res.end();
+    }
+    if (req.method !== 'POST') {
+      res.writeHead(405, corsHeaders(req));
+      return res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+    }
+    if (!isValidAdmin(req)) {
+      res.writeHead(403, corsHeaders(req));
+      return res.end(JSON.stringify({ error: '管理密碼錯誤' }));
+    }
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+      if (body.length > 10_000) req.destroy();
+    });
+    req.on('end', () => {
+      try {
+        const { ids } = JSON.parse(body);
+        const cleanIds = (Array.isArray(ids) ? ids : [])
+          .map(Number)
+          .filter(Number.isInteger)
+          .slice(0, 100);
+        if (!cleanIds.length) {
+          res.writeHead(400, corsHeaders(req));
+          return res.end(JSON.stringify({ error: '沒有指定要刪除的留言' }));
+        }
+        const placeholders = cleanIds.map(() => '?').join(',');
+        const result = db
+          .prepare(`DELETE FROM messages WHERE id IN (${placeholders})`)
+          .run(...cleanIds);
+        res.writeHead(200, corsHeaders(req));
+        res.end(JSON.stringify({ ok: true, deleted: result.changes }));
+      } catch {
+        res.writeHead(400, corsHeaders(req));
+        res.end(JSON.stringify({ error: '格式錯誤' }));
+      }
+    });
+    return;
   }
 
   // 其餘一律回首頁
